@@ -79,18 +79,18 @@ npm start       # production
 
 ### API Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/auth/validate-credentials` | — | Step 1: proxy to default system |
-| POST | `/api/v1/auth/send-otp` | — | Step 2: proxy to default system |
-| POST | `/api/v1/auth/verify-otp` | — | Step 3: verify + fan-out + return matched systems |
-| POST | `/api/v1/auth/login` | — | Direct login (non-OTP path) |
-| GET  | `/api/v1/profiles` | ERP JWT (super_admin) | List all profiles |
-| POST | `/api/v1/profiles` | ERP JWT (super_admin) | Create profile |
-| PATCH | `/api/v1/profiles/:id` | ERP JWT (super_admin) | Update profile |
-| PATCH | `/api/v1/profiles/:id/set-default` | ERP JWT (super_admin) | Change default system |
-| DELETE | `/api/v1/profiles/:id` | ERP JWT (super_admin) | Delete profile |
-| GET  | `/api/v1/health` | — | Health check |
+| Method | Path                                | Auth                  | Description                                       |
+| ------ | ----------------------------------- | --------------------- | ------------------------------------------------- |
+| POST   | `/api/v1/auth/validate-credentials` | —                     | Step 1: proxy to default system                   |
+| POST   | `/api/v1/auth/send-otp`             | —                     | Step 2: proxy to default system                   |
+| POST   | `/api/v1/auth/verify-otp`           | —                     | Step 3: verify + fan-out + return matched systems |
+| POST   | `/api/v1/auth/login`                | —                     | Direct login (non-OTP path)                       |
+| GET    | `/api/v1/profiles`                  | ERP JWT (super_admin) | List all profiles                                 |
+| POST   | `/api/v1/profiles`                  | ERP JWT (super_admin) | Create profile                                    |
+| PATCH  | `/api/v1/profiles/:id`              | ERP JWT (super_admin) | Update profile                                    |
+| PATCH  | `/api/v1/profiles/:id/set-default`  | ERP JWT (super_admin) | Change default system                             |
+| DELETE | `/api/v1/profiles/:id`              | ERP JWT (super_admin) | Delete profile                                    |
+| GET    | `/api/v1/health`                    | —                     | Health check                                      |
 
 ### Changing the Default System
 
@@ -98,6 +98,7 @@ The default system is the one used for authentication (credentials + OTP).
 Currently URA Security System is the default.
 
 To change it via SQL:
+
 ```sql
 UPDATE software_profiles SET is_default = 0;
 UPDATE software_profiles SET is_default = 1 WHERE name = 'ICDV Management';
@@ -144,6 +145,7 @@ npm run build
 
 Available to users with `super_admin` role (from the default system).
 Allows full CRUD on software profiles:
+
 - Add a new child system
 - Edit URLs, icons, descriptions
 - Rotate the `erp_secret`
@@ -160,21 +162,24 @@ Each child system needs **3 files added** and **1 line in the router**.
 
 **Copy these files:**
 
-| Source | Destination in URA |
-|--------|-------------------|
-| `child-erp-endpoint/ura/erpSecret.middleware.js` | `src/middlewares/erpSecret.js` |
-| `child-erp-endpoint/ura/erp.controller.js` | `src/controllers/erp.controller.js` |
-| `child-erp-endpoint/ura/erp.routes.js` | `src/routes/erp.routes.js` |
+| Source                                           | Destination in URA                  |
+| ------------------------------------------------ | ----------------------------------- |
+| `child-erp-endpoint/ura/erpSecret.middleware.js` | `src/middlewares/erpSecret.js`      |
+| `child-erp-endpoint/ura/erp.controller.js`       | `src/controllers/erp.controller.js` |
+| `child-erp-endpoint/ura/erp.routes.js`           | `src/routes/erp.routes.js`          |
 
 **Add to `src/routes/index.js`:**
+
 ```js
-router.use('/erp', require('./erp.routes'));
+router.use("/erp", require("./erp.routes"));
 ```
 
 **Add to `.env`:**
+
 ```env
 ERP_SECRET=CHANGE_THIS_URA_SECRET_BEFORE_DEPLOY
 ```
+
 > Must match the `erp_secret` stored for URA in the ERP database.
 
 ---
@@ -183,18 +188,20 @@ ERP_SECRET=CHANGE_THIS_URA_SECRET_BEFORE_DEPLOY
 
 **Copy these files:**
 
-| Source | Destination in ICDV |
-|--------|---------------------|
-| `child-erp-endpoint/icdv/erpSecret.middleware.js` | `middlewares/erpSecret.js` |
-| `child-erp-endpoint/icdv/erp.controller.js` | `controllers/erp.controller.js` |
-| `child-erp-endpoint/icdv/erp.route.js` | `routes/v1/erp.route.js` |
+| Source                                            | Destination in ICDV             |
+| ------------------------------------------------- | ------------------------------- |
+| `child-erp-endpoint/icdv/erpSecret.middleware.js` | `middlewares/erpSecret.js`      |
+| `child-erp-endpoint/icdv/erp.controller.js`       | `controllers/erp.controller.js` |
+| `child-erp-endpoint/icdv/erp.route.js`            | `routes/v1/erp.route.js`        |
 
 **Add to `routes/v1/index.js`:**
+
 ```js
-router.use('/erp', require('./erp.route'));
+router.use("/erp", require("./erp.route"));
 ```
 
 **Add to `.env`:**
+
 ```env
 ERP_SECRET=CHANGE_THIS_ICDV_SECRET_BEFORE_DEPLOY
 ```
@@ -205,15 +212,16 @@ ERP_SECRET=CHANGE_THIS_ICDV_SECRET_BEFORE_DEPLOY
 
 Same files as ICDV but placed under `src/`:
 
-| Source | Destination in Project Mgmt |
-|--------|------------------------------|
-| `child-erp-endpoint/icdv/erpSecret.middleware.js` | `src/middlewares/erpSecret.js` |
-| `child-erp-endpoint/icdv/erp.controller.js` | `src/controllers/erp.controller.js` |
-| `child-erp-endpoint/icdv/erp.route.js` | `src/routes/v1/erp.route.js` |
+| Source                                            | Destination in Project Mgmt         |
+| ------------------------------------------------- | ----------------------------------- |
+| `child-erp-endpoint/icdv/erpSecret.middleware.js` | `src/middlewares/erpSecret.js`      |
+| `child-erp-endpoint/icdv/erp.controller.js`       | `src/controllers/erp.controller.js` |
+| `child-erp-endpoint/icdv/erp.route.js`            | `src/routes/v1/erp.route.js`        |
 
 **Add to `src/routes/v1/index.js`:**
+
 ```js
-router.use('/erp', require('./erp.route'));
+router.use("/erp", require("./erp.route"));
 ```
 
 **The `enrichUser` function** in `erp.controller.js` tries to join the
@@ -222,6 +230,7 @@ Remove the `enrichUser` call and the `icdv_id`/`icdv_name` fields from
 `SAFE_USER_FIELDS` in that copy.
 
 **Add to `.env`:**
+
 ```env
 ERP_SECRET=CHANGE_THIS_PROJ_SECRET_BEFORE_DEPLOY
 ```
@@ -232,15 +241,16 @@ ERP_SECRET=CHANGE_THIS_PROJ_SECRET_BEFORE_DEPLOY
 
 **Copy these files:**
 
-| Source | Destination in Mgmt System |
-|--------|----------------------------|
-| `child-erp-endpoint/mgmt/erpCtrl.js` | `Controllers/erpCtrl.js` |
-| `child-erp-endpoint/mgmt/erpRt.js` | `Routes/erpRt.js` |
+| Source                               | Destination in Mgmt System |
+| ------------------------------------ | -------------------------- |
+| `child-erp-endpoint/mgmt/erpCtrl.js` | `Controllers/erpCtrl.js`   |
+| `child-erp-endpoint/mgmt/erpRt.js`   | `Routes/erpRt.js`          |
 
 **Add to `server.js`:**
+
 ```js
-const erpRoutes = require('./Routes/erpRt');
-App.use('/api/erp', erpRoutes);
+const erpRoutes = require("./Routes/erpRt");
+App.use("/api/erp", erpRoutes);
 ```
 
 **The Management System uses `/api/erp/lookup-user`** (no `/v1/`).
@@ -249,6 +259,7 @@ if you want a consistent path — or keep as-is since the ERP backend calls
 the path set per-profile in the DB.
 
 **Add to `.env` (or set in the process environment):**
+
 ```env
 ERP_SECRET=CHANGE_THIS_MGMT_SECRET_BEFORE_DEPLOY
 ```
@@ -262,6 +273,7 @@ ERP_SECRET=CHANGE_THIS_MGMT_SECRET_BEFORE_DEPLOY
 ## 4 · Child Frontend Token Handler
 
 When the ERP portal redirects to a child app it appends:
+
 ```
 http://localhost:5173/?token=xxx&refreshToken=yyy
 ```
@@ -276,7 +288,7 @@ frontend at `src/hooks/useErpTokenHandler.ts`.
 **Use it in `App.tsx`** (inside `<AuthProvider>`):
 
 ```tsx
-import { useErpTokenHandler } from './hooks/useErpTokenHandler';
+import { useErpTokenHandler } from "./hooks/useErpTokenHandler";
 
 // Add this component just inside AuthProvider:
 function ErpInit() {
@@ -286,11 +298,9 @@ function ErpInit() {
 
 // Inside your router/app tree:
 <AuthProvider>
-  <ErpInit />           {/* ← add this */}
-  <Router>
-    ...
-  </Router>
-</AuthProvider>
+  <ErpInit /> {/* ← add this */}
+  <Router>...</Router>
+</AuthProvider>;
 ```
 
 The hook reads `?token=` from the URL, stores it under `access_token`
@@ -310,6 +320,7 @@ Each child system has its **own unique secret**. This means:
 - Then update the child system's `.env` `ERP_SECRET` and restart it
 
 **Generating a strong secret:**
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
@@ -318,14 +329,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## 6 · Port Reference
 
-| Service | Default Port |
-|---------|-------------|
-| ERP Services (backend) | `4500` |
-| ERP Portal (frontend) | `4173` |
-| Management System | `8686` |
-| URA Security System | `3001` (set in `.env`) |
-| ICDV Management | `3002` (set in `.env`) |
-| Project Management | `3003` (set in `.env`) |
+| Service                | Default Port           |
+| ---------------------- | ---------------------- |
+| ERP Services (backend) | `4500`                 |
+| ERP Portal (frontend)  | `4173`                 |
+| Management System      | `8686`                 |
+| URA Security System    | `3001` (set in `.env`) |
+| ICDV Management        | `3002` (set in `.env`) |
+| Project Management     | `3003` (set in `.env`) |
 
 ---
 
@@ -336,14 +347,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 module.exports = {
   apps: [
     {
-      name: 'erp-services',
-      cwd:  './erp-services',
-      script: 'src/index.js',
+      name: "erp-services",
+      cwd: "./erp-services",
+      script: "src/index.js",
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: "production",
         PORT: 4500,
-        DB_HOST: '127.0.0.1',
-        DB_NAME: 'erp_portal_db',
+        DB_HOST: "127.0.0.1",
+        DB_NAME: "erp_portal_db",
         // ... other env vars
       },
     },

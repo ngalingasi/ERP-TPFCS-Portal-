@@ -62,3 +62,16 @@ const connQuery = async (conn, sql, params = []) => {
 };
 
 module.exports = { getPool, testConnection, query, transaction, connQuery };
+
+
+// Quick connectivity test used at startup and in health checks
+const ping = async () => {
+  try {
+    await getPool().query('SELECT 1');
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+module.exports.ping = ping;
