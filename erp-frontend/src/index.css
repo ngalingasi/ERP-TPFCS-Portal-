@@ -75,3 +75,36 @@ layer(base);
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+/* ── Theme CSS variables ─────────────────────────────────────────────────── */
+:root {
+  --bg-page:       #f4f6fb;
+  --bg-card:       #ffffff;
+  --bg-nav:        rgba(255,255,255,0.85);
+  --border:        rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
+  --brand:         #465fff;
+  --brand-soft:    rgba(70,95,255,0.1);
+  --success:       #12b76a;
+  --error:         #f04438;
+  --shadow-card:   0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.dark {
+  --bg-page:       #0c111d;
+  --bg-card:       #161c2d;
+  --bg-nav:        rgba(13,19,35,0.9);
+  --border:        rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.12);
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:    #475569;
+  --brand:         #465fff;
+  --brand-soft:    rgba(70,95,255,0.15);
+  --success:       #12b76a;
+  --error:         #f04438;
+  --shadow-card:   0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+}

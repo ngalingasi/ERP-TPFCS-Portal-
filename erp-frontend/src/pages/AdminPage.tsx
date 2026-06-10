@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Plus, Pencil, Trash2, Star, StarOff, Eye, EyeOff,
-  ShieldCheck, Monitor, X, AlertCircle, CheckCircle, Loader2,
+  ShieldCheck, Monitor, X, AlertCircle, CheckCircle, Loader2, ArrowLeft,
 } from 'lucide-react';
+import PortalNav from '../components/PortalNav';
 import { profilesApi } from '../api/profiles';
 import type { SoftwareProfile } from '../types';
 
@@ -18,15 +20,15 @@ const B = {
 const inp: React.CSSProperties = {
   width: '100%', height: 42,
   padding: '0 12px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8, color: B.gray50,
+  background: 'var(--bg-page)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: 8, color: 'var(--text-primary)',
   fontFamily: 'Outfit, sans-serif', fontSize: 14, outline: 'none',
 };
 
 const lbl: React.CSSProperties = {
   display: 'block', fontSize: 12, fontWeight: 500,
-  color: B.gray400, marginBottom: 6,
+  color: 'var(--text-muted)', marginBottom: 6,
   textTransform: 'uppercase', letterSpacing: '0.4px',
 };
 
@@ -49,6 +51,7 @@ const EMPTY: any = {
 };
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [profiles,   setProfiles]  = useState<SoftwareProfile[]>([]);
   const [loading,    setLoading]   = useState(true);
   const [mode,       setMode]      = useState<FormMode>(null);
@@ -107,14 +110,25 @@ export default function AdminPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: 'Outfit, sans-serif', background: B.gray950, color: B.gray50, padding: '40px 24px' }}>
-      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', fontFamily: 'Outfit, sans-serif', background: 'var(--bg-page)', color: 'var(--text-primary)', transition: 'background 0.2s' }}>
+      <PortalNav activePage="admin" />
+      <div style={{ maxWidth: 880, margin: '0 auto', padding: '40px 24px' }}>
 
         {/* Header */}
+        <div style={{ marginBottom: 4 }}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--text-muted)', fontFamily: 'Outfit, sans-serif', fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 14 }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+          >
+            <ArrowLeft size={14} /> Back to Dashboard
+          </button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.2px' }}>Software Profiles</h1>
-            <p style={{ fontSize: 13, color: B.gray500, margin: 0 }}>Manage systems accessible through the ERP portal</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Manage systems accessible through the ERP portal</p>
           </div>
           <button
             onClick={openCreate}
@@ -143,15 +157,15 @@ export default function AdminPage() {
 
         {/* List */}
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: B.gray600, padding: '24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', padding: '24px 0' }}>
             <Loader2 size={16} style={{ animation: 'erp-spin 0.8s linear infinite' }} /> Loading…
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {profiles.map(p => (
               <div key={p.id} style={{
-                background: 'rgba(255,255,255,0.025)',
-                border: `1px solid ${p.is_default ? 'rgba(70,95,255,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                background: 'var(--bg-card)',
+                border: `1px solid ${p.is_default ? 'rgba(70,95,255,0.35)' : 'var(--border)'}`,
                 borderRadius: 12, padding: '14px 18px',
                 display: 'flex', alignItems: 'center', gap: 14,
               }}>
@@ -168,7 +182,7 @@ export default function AdminPage() {
                       <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'rgba(240,68,56,0.1)', color: '#fda29b', border: '1px solid rgba(240,68,56,0.25)' }}>INACTIVE</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: B.gray600, fontFamily: 'monospace' }}>{p.api_base_url}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{p.api_base_url}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   {!p.is_default && (
@@ -188,7 +202,7 @@ export default function AdminPage() {
                   <button
                     onClick={() => openEdit(p)}
                     title="Edit"
-                    style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 7, color: B.gray300, cursor: 'pointer' }}
+                    style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 7, color: 'var(--text-secondary)', cursor: 'pointer' }}
                   >
                     <Pencil size={14} />
                   </button>
@@ -211,11 +225,11 @@ export default function AdminPage() {
       {/* Modal */}
       {mode && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}>
-          <div style={{ background: '#0d1321', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', fontFamily: 'Outfit, sans-serif' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', fontFamily: 'Outfit, sans-serif' }}>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{mode === 'create' ? 'Add Software Profile' : 'Edit Profile'}</h2>
-              <button onClick={() => { setMode(null); setError(''); }} style={{ background: 'none', border: 'none', color: B.gray500, cursor: 'pointer', display: 'flex' }}>
+              <button onClick={() => { setMode(null); setError(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
                 <X size={18} />
               </button>
             </div>
@@ -256,16 +270,16 @@ export default function AdminPage() {
                     value={form.erp_secret}
                     onChange={e => setForm((f: any) => ({ ...f, erp_secret: e.target.value }))}
                   />
-                  <button type="button" onClick={() => setShowSec(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: B.gray500, cursor: 'pointer', display: 'flex' }}>
+                  <button type="button" onClick={() => setShowSec(s => !s)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
                     {showSecret ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                <p style={{ fontSize: 11, color: B.gray700, marginTop: 5 }}>Must match ERP_SECRET in the child system's .env file</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5 }}>Must match ERP_SECRET in the child system's .env file</p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                 <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm((f: any) => ({ ...f, is_active: e.target.checked }))} style={{ width: 16, height: 16, accentColor: B.brand500 }} />
-                <label htmlFor="is_active" style={{ fontSize: 13, color: B.gray300, cursor: 'pointer' }}>Active</label>
+                <label htmlFor="is_active" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>Active</label>
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -279,7 +293,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => { setMode(null); setError(''); }}
-                  style={{ height: 42, padding: '0 18px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8, color: B.gray300, fontFamily: 'Outfit, sans-serif', fontSize: 14, cursor: 'pointer' }}
+                  style={{ height: 42, padding: '0 18px', background: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-secondary)', fontFamily: 'Outfit, sans-serif', fontSize: 14, cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
