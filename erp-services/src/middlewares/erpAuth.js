@@ -5,16 +5,17 @@
  * Verifies the short-lived JWT that the ERP portal itself issues after
  * a successful login — completely separate from child system tokens.
  *
- * The token payload carries:
- *   { sub: user_id, role, systemId, email, iat, exp, type: 'erp_access' }
+ * Token payload:
+ *   { sub, role, systemId, email, iat, exp, type: 'erp_access', must_change_password? }
+ *
+ * Tokens with must_change_password: true are ONLY valid for /auth/change-password.
+ * All other routes reject them.
  */
 
 const jwt        = require('jsonwebtoken');
 const httpStatus = require('http-status');
 const config     = require('../config/config');
 const ApiError   = require('../utils/ApiError');
-
-const ERP_SUPER_ADMIN_ROLES = ['super_admin'];
 
 const erpAuth = (...requiredRoles) => (req, res, next) => {
   try {
@@ -30,11 +31,15 @@ const erpAuth = (...requiredRoles) => (req, res, next) => {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token type');
     }
 
+    // Tokens with must_change_password flag may ONLY call /auth/change-password
+    if (payload.must_change_password && !req.path.includes('change-password')) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'You must change your password before continuing.');
+    }
+
     req.erpUser = payload;
 
     if (requiredRoles.length) {
-      const hasRole = requiredRoles.includes(payload.role);
-      if (!hasRole) {
+      if (!requiredRoles.includes(payload.role)) {
         throw new ApiError(httpStatus.FORBIDDEN, 'Insufficient permissions');
       }
     }
@@ -46,8 +51,7 @@ const erpAuth = (...requiredRoles) => (req, res, next) => {
   }
 };
 
-const isSuperAdmin = (req) =>
-  ERP_SUPER_ADMIN_ROLES.includes(req.erpUser?.role);
+const isSuperAdmin = (req) => req.erpUser?.role === 'super_admin';
 
 module.exports = erpAuth;
 module.exports.isSuperAdmin = isSuperAdmin;

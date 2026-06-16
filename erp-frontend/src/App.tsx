@@ -6,6 +6,7 @@ import LoginPage     from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage   from './pages/ProfilePage';
 import AdminPage     from './pages/AdminPage';
+import MonitoringPage from './pages/MonitoringPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useErpAuth();
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/profile"   element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/admin"     element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+            <Route path="/monitoring" element={<ProtectedRoute><MonitoringPage /></ProtectedRoute>} />
             <Route path="*"          element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

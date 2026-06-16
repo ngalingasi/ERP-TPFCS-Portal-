@@ -6,10 +6,11 @@ import {
   Monitor, AlertCircle, Building2,
 } from 'lucide-react';
 import { authApi } from '../api/auth';
+import { redirectToSystem } from '../utils/redirect';
 import { useErpAuth } from '../store/authStore';
 import type { OtpChannel, MatchedSystem } from '../types';
 
-type Step = 'credentials' | 'channel' | 'otp' | 'systems' | 'redirecting';
+type Step = 'credentials' | 'channel' | 'otp' | 'change-password' | 'redirecting';
 
 const B = {
   brand500: '#465fff', brand600: '#3641f5', brand400: '#7592ff',
@@ -47,17 +48,7 @@ const SystemIcon = ({ icon, size = 20 }: { icon: string; size?: number }) => {
   return <>{map[icon] ?? <Monitor size={size} />}</>;
 };
 
-const redirectToSystem = (system: MatchedSystem) => {
-  const token        = system.tokens.access?.token  ?? '';
-  const refreshToken = system.tokens.refresh?.token ?? '';
-  localStorage.setItem('access_token',  token);
-  localStorage.setItem('refresh_token', refreshToken);
-  localStorage.setItem('tpfcs_user',    JSON.stringify(system.user));
-  const url = new URL(system.profile.app_url);
-  if (token)        url.searchParams.set('token',        token);
-  if (refreshToken) url.searchParams.set('refreshToken', refreshToken);
-  window.location.href = url.toString();
-};
+// redirectToSystem imported from utils/redirect
 
 // ── Shared input style (light card) ──────────────────────────────────────────
 const inp: React.CSSProperties = {
@@ -146,6 +137,10 @@ export default function LoginPage() {
   const [redirectTarget,  setRedirectTarget]= useState<MatchedSystem | null>(null);
   const [countdown,       setCountdown]     = useState(3);
   const [channelLoading,  setChLoading]     = useState<string | null>(null);
+  const [cpErpToken,      setCpErpToken]    = useState('');
+  const [newPassword,     setNewPassword]   = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPass,     setShowNewPass]   = useState(false);
 
   const loginRef = useRef<HTMLInputElement>(null);
 
@@ -168,8 +163,10 @@ export default function LoginPage() {
       const { data } = await authApi.validateCredentials(loginField.trim(), password);
       if (!data.status) {
         if (data.must_change_password) {
-          const res = await authApi.directLogin(loginField.trim(), password);
-          handleLoginResult(res.data); return;
+          // ERP intercepted — show change-password form
+          setCpErpToken(data.erpToken ?? '');
+          setStep('change-password');
+          setLoading(false); return;
         }
         return err(data.message || 'Invalid credentials.');
       }
@@ -177,6 +174,19 @@ export default function LoginPage() {
       setStep('channel');
     } catch (e: any) {
       err(e.response?.data?.message || 'Unable to reach the server. Please check your connection.');
+    } finally { setLoading(false); }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    setError(''); setLoading(true);
+    try {
+      const { data } = await authApi.changePassword(loginField.trim(), password, newPassword, cpErpToken);
+      handleLoginResult(data);
+    } catch (e: any) {
+      err(e.response?.data?.message || 'Failed to change password. Please try again.');
     } finally { setLoading(false); }
   };
 
@@ -206,6 +216,13 @@ export default function LoginPage() {
   };
 
   const handleLoginResult = (data: any) => {
+    // must_change_password — ERP intercepted, show change-password form
+    if (data.must_change_password) {
+      setCpErpToken(data.erpToken ?? '');
+      setStep('change-password');
+      setLoading(false);
+      return;
+    }
     if (!data.status || !data.matchedSystems?.length) {
       err('No systems found for your account. Contact your administrator.');
       return;
@@ -504,7 +521,60 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* ── REDIRECTING ─────────────────────────────────────────────── */}
+            {/* ── CHANGE PASSWORD ─────────────────────────────────────────── */}
+            {step === 'change-password' && (
+              <div className="erp-anim">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: '11px 14px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 10 }}>
+                  <AlertCircle size={16} style={{ color: '#d97706', flexShrink: 0 }} />
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', margin: 0 }}>Password change required</p>
+                    <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Set a new password to continue</p>
+                  </div>
+                </div>
+
+                {error && <Alert msg={error} />}
+
+                <form onSubmit={handleChangePassword}>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={lbl}>New Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="erp-inp"
+                        style={inp}
+                        type={showNewPass ? 'text' : 'password'}
+                        placeholder="Enter new password (min 8 characters)"
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        autoFocus
+                      />
+                      <button type="button" onClick={() => setShowNewPass(s => !s)}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', padding: 4 }}>
+                        {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 6 }}>
+                    <label style={lbl}>Confirm New Password</label>
+                    <input
+                      className="erp-inp"
+                      style={inp}
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <button type="submit" className="erp-pbtn" style={primaryBtn}
+                    disabled={loading || !newPassword || !confirmPassword}>
+                    {loading ? <Spin /> : <><span>Set New Password & Continue</span><ArrowRight size={16} /></>}
+                  </button>
+                </form>
+              </div>
+            )}
+
+
             {step === 'redirecting' && redirectTarget && (
               <div className="erp-anim" style={{ textAlign: 'center', padding: '24px 0' }}>
                 <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 18px', background: 'rgba(18,183,106,0.08)', border: '2px solid rgba(18,183,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'erp-pop 0.4s ease both' }}>

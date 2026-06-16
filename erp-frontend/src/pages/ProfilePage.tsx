@@ -54,6 +54,9 @@ const USER_FIELDS = [
 ];
 
 // ── Per-system live fetch ─────────────────────────────────────────────────────
+// Fetches via ERP services proxy (POST /health/profile) which calls
+// POST /erp/me on the child system using the ERP secret.
+// This avoids needing to know each child's /auth/me URL or token format.
 
 interface SystemProfile {
   system:  MatchedSystem;
@@ -62,14 +65,25 @@ interface SystemProfile {
   error:   string | null;
 }
 
-const fetchUserProfile = async (system: MatchedSystem): Promise<SystemUser> => {
-  const token = system.tokens.access?.token ?? '';
-  const base  = system.profile.api_base_url;
-  const res   = await fetch(`${base}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+const fetchUserProfile = async (system: MatchedSystem, erpToken: string): Promise<SystemUser> => {
+  const email = system.user?.email;
+  if (!email) throw new Error('No email in session');
+
+  const res = await fetch(
+    `${(import.meta as any).env?.VITE_ERP_API_URL ?? '/api/v1'}/health/profile?profileId=${system.profile.id}`,
+    {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${erpToken}`,
+      },
+      body: JSON.stringify({ email }),
+    }
+  );
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json();
+  const data = await res.json();
+  if (!data.status) throw new Error(data.error || 'Not found');
+  return data.user;
 };
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -97,7 +111,7 @@ export default function ProfilePage() {
   useEffect(() => {
     systems.forEach((sys, i) => {
       setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, loading: true, error: null } : p));
-      fetchUserProfile(sys)
+      fetchUserProfile(sys, token)
         .then(user => setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, user, loading: false } : p)))
         .catch(err => setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, loading: false, error: err.message } : p)));
     });
@@ -105,7 +119,7 @@ export default function ProfilePage() {
 
   const refetch = (i: number) => {
     setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, loading: true, error: null } : p));
-    fetchUserProfile(systems[i])
+    fetchUserProfile(systems[i], token)
       .then(user => setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, user, loading: false } : p)))
       .catch(err => setProfiles(prev => prev.map((p, idx) => idx === i ? { ...p, loading: false, error: err.message } : p)));
   };

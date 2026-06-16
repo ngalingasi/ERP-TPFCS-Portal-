@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ExternalLink, User, ShieldCheck, Monitor, Building2 } from 'lucide-react';
+import { redirectToSystem } from '../utils/redirect';
 import { useErpAuth } from '../store/authStore';
 import PortalNav from '../components/PortalNav';
 import type { MatchedSystem } from '../types';
@@ -16,17 +17,7 @@ const SystemIcon = ({ icon, size = 22 }: { icon: string; size?: number }) => {
   return <>{map[icon] ?? <Monitor size={size} />}</>;
 };
 
-const redirectToSystem = (system: MatchedSystem) => {
-  const token        = system.tokens.access?.token  ?? '';
-  const refreshToken = system.tokens.refresh?.token ?? '';
-  localStorage.setItem('access_token',  token);
-  localStorage.setItem('refresh_token', refreshToken);
-  localStorage.setItem('tpfcs_user',    JSON.stringify(system.user));
-  const url = new URL(system.profile.app_url);
-  if (token)        url.searchParams.set('token',        token);
-  if (refreshToken) url.searchParams.set('refreshToken', refreshToken);
-  window.location.href = url.toString();
-};
+// redirectToSystem imported from utils/redirect
 
 const isTokenExpired = (token: string): boolean => {
   try { const p = JSON.parse(atob(token.split('.')[1])); return p.exp * 1000 < Date.now(); }

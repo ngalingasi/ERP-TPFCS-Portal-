@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings, User, Activity } from 'lucide-react';
 import { useErpAuth } from '../store/authStore';
 import ThemeToggle from './ThemeToggle';
 
@@ -10,7 +10,7 @@ const decodeErpUser = (token: string) => {
 const getInitials = (s: string) =>
   s.split(/[@.\s_-]/)[0].slice(0, 2).toUpperCase();
 
-export default function PortalNav({ activePage }: { activePage?: 'dashboard' | 'profile' | 'admin' }) {
+export default function PortalNav({ activePage }: { activePage?: 'dashboard' | 'profile' | 'admin' | 'monitoring' }) {
   const navigate = useNavigate();
   const { erpToken, clear } = useErpAuth();
 
@@ -52,6 +52,17 @@ export default function PortalNav({ activePage }: { activePage?: 'dashboard' | '
 
         {/* Theme toggle */}
         <ThemeToggle />
+
+        {/* Monitoring — admin + super_admin */}
+        {(isSuperAdmin || erpUser?.role === 'admin') && (
+          <NavBtn
+            icon={<Activity size={14} />}
+            label="Monitoring"
+            active={activePage === 'monitoring'}
+            onClick={() => navigate('/monitoring')}
+            color="default"
+          />
+        )}
 
         {/* Manage Profiles — super admin only */}
         {isSuperAdmin && (
